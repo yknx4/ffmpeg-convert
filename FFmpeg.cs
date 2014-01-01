@@ -185,6 +185,9 @@ namespace ffmpeg_convert
                     ProgressChanged(this, e);
             }
 
+            /// <summary>
+            /// The current item
+            /// </summary>
             private TagLib.File currentItem;
 
             /// <summary>
@@ -231,7 +234,7 @@ namespace ffmpeg_convert
                 //Console.WriteLine(Environment.NewLine + "Args: " + startInfo.Arguments + Environment.NewLine);
                 if (mProcess.Start())
                 {
-                    LastError = "Args:" + startInfo.Arguments + Environment.NewLine;
+                    //LastError = "Args:" + startInfo.Arguments + Environment.NewLine;
                     mProcess.BeginOutputReadLine();
                     mProcess.BeginErrorReadLine();
                     mProcess.WaitForExit();
@@ -248,7 +251,7 @@ namespace ffmpeg_convert
             /// <param name="e">The <see cref="DataReceivedEventArgs"/> instance containing the event data.</param>
             private void handleProgressOutput(object sender, DataReceivedEventArgs e)
             {
-                LastError += e.Data + Environment.NewLine;
+                //LastError += e.Data + Environment.NewLine;
                 ParseProgressLine(e.Data);
             }
 
@@ -275,7 +278,7 @@ namespace ffmpeg_convert
                 }
             }
 
-            public string LastError { get; set; }
+            
         }
     }
 }

@@ -50,12 +50,6 @@
     <Compile Include="TimeSpanExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\taglib-sharp\src\taglib-sharp.csproj">
-      <Project>{6b143a39-c7b2-4743-9917-92262c60e9a6}</Project>
-      <Name>taglib-sharp</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config" />
     <None Include="Properties\ffmpeg.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -69,6 +63,12 @@
     <Content Include="external\x86\ffmpeg.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\taglib-sharp\src\taglib-sharp.csproj">
+      <Project>{6b143a39-c7b2-4743-9917-92262c60e9a6}</Project>
+      <Name>taglib-sharp</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
