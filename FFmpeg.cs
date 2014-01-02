@@ -248,7 +248,11 @@ namespace ffmpeg_convert
                     startInfo.Arguments += " -b " + args.Preset;
                 }
                 startInfo.Arguments += " \"" + output.FullName + "\"";
-                startInfo.Arguments += " -vsync 2 -y -loglevel fatal -stats";
+                startInfo.Arguments += " -vsync 2 -y";
+#if(!DEBUG)
+                startInfo.Arguments += " -loglevel fatal";
+#endif
+                startInfo.Arguments += "  -stats";
                 mProcess.StartInfo = startInfo;
                 //Console.WriteLine(Environment.NewLine + "Args: " + startInfo.Arguments + Environment.NewLine);
                 if (mProcess.Start())
@@ -271,7 +275,7 @@ namespace ffmpeg_convert
             private void handleProgressOutput(object sender, DataReceivedEventArgs e)
             {
                 //LastError += e.Data + Environment.NewLine;
-                ParseProgressLine(e.Data);
+                ParseProgressLine(e.Data,false);
             }
             /// <summary>
             /// Handles the progress error.
@@ -281,12 +285,8 @@ namespace ffmpeg_convert
             private void handleProgressError(object sender, DataReceivedEventArgs e)
             {
                 //LastError += e.Data + Environment.NewLine;
-                //ParseProgressLine(e.Data);
-                OnMessageReceived(new MessageReceivedEventArgs { 
-                    isError=true,
-                    Message=e.Data
+                ParseProgressLine(e.Data,true);
                 
-                });
                 
             }
 
@@ -294,7 +294,7 @@ namespace ffmpeg_convert
             /// Parses the progress line in FFmpeg output.
             /// </summary>
             /// <param name="text">The text from output.</param>
-            private void ParseProgressLine(string text)
+            private void ParseProgressLine(string text, bool isErrorOutput)
             {
                 string original;
                 if (text == null) original = string.Empty;
@@ -311,15 +311,25 @@ namespace ffmpeg_convert
 
                     //Console.WriteLine(mPosicion.ToString() + " / "+currentItem.Properties.Duration.ZeroMilliseconds().ToString()+"    "+(progress*100).ToString()+"%");
                 }
+                else if(isErrorOutput)
+                {
+                    if (original.Length > 1)
+                        OnMessageReceived(new MessageReceivedEventArgs
+                        {
+                            isError = true,
+                            Message = original
+
+                        });
+                }
                 else
                 {
-                    if(text!=string.Empty)
-                    OnMessageReceived(new MessageReceivedEventArgs
-                    {
-                        isError = false,
-                        Message = text
+                    if (original.Length > 1)
+                        OnMessageReceived(new MessageReceivedEventArgs
+                        {
+                            isError = false,
+                            Message = original
 
-                    });
+                        });
                 }
             }
 
