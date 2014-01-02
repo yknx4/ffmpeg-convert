@@ -6,6 +6,7 @@ using System.Reflection;
 namespace ffmpeg_convert
 {
     public delegate void ProgressChangedEventHandler(object sender, FFmpeg.Convert.ProgressChangedEventArgs e);
+    public delegate void MessageReceivedEventHandler(object sender, FFmpeg.Convert.MessageReceivedEventArgs e);
 
     /// <summary>
     ///  FFmpeg class
@@ -88,7 +89,7 @@ namespace ffmpeg_convert
             {
                 isVariable = true;
                 _preset = 2;
-                MinBitrate = 0;
+                //MinBitrate = 0;
             }
 
             /// <summary>
@@ -101,7 +102,7 @@ namespace ffmpeg_convert
 
             private int _preset;
 
-            public int MinBitrate { get; set; }
+            //public int MinBitrate { get; set; }
 
             /// <summary>
             /// Gets or sets the preset bitrate.
@@ -168,11 +169,25 @@ namespace ffmpeg_convert
             public event ProgressChangedEventHandler ProgressChanged;
 
             /// <summary>
+            /// Occurs when [message received].
+            /// </summary>
+            public event MessageReceivedEventHandler MessageReceived;
+
+            /// <summary>
             /// Event args for [progress changed]
             /// </summary>
             public class ProgressChangedEventArgs : EventArgs
             {
                 public Double Progress { get; set; }
+            }
+
+            /// <summary>
+            /// Event args for [message received]
+            /// </summary>
+            public class MessageReceivedEventArgs : EventArgs
+            {
+                public bool isError { get; set; }
+                public string Message { get; set; }
             }
 
             /// <summary>
@@ -184,7 +199,16 @@ namespace ffmpeg_convert
                 if (ProgressChanged != null)
                     ProgressChanged(this, e);
             }
-
+            /// <summary>
+            /// Raises the <see cref="E:MessageReceived" /> event.
+            /// </summary>
+            /// <param name="e">The <see cref="MessageReceivedEventArgs"/> instance containing the event data.</param>
+            protected virtual void OnMessageReceived(MessageReceivedEventArgs e)
+            {
+                if (MessageReceived != null)
+                    MessageReceived(this, e);
+            }
+            
             /// <summary>
             /// The current item
             /// </summary>
@@ -201,15 +225,10 @@ namespace ffmpeg_convert
             {
                 
                 currentItem = TagLib.File.Create(input.FullName);
-                if (input.Extension.ToLower() == ".mp3" && (args.MinBitrate > 0 && currentItem.Properties.AudioBitrate < args.MinBitrate))
-                {
-                    input.CopyTo(output.FullName, true);
-                    return true;
-                }
                 ProcessStartInfo startInfo = new ProcessStartInfo();
                 Process mProcess = new Process();
                 mProcess.EnableRaisingEvents = true;
-                mProcess.ErrorDataReceived += handleProgressOutput;
+                mProcess.ErrorDataReceived += handleProgressError;
                 mProcess.OutputDataReceived += handleProgressOutput;
                 startInfo.CreateNoWindow = true;
                 startInfo.UseShellExecute = false;
@@ -254,6 +273,22 @@ namespace ffmpeg_convert
                 //LastError += e.Data + Environment.NewLine;
                 ParseProgressLine(e.Data);
             }
+            /// <summary>
+            /// Handles the progress error.
+            /// </summary>
+            /// <param name="sender">The sender.</param>
+            /// <param name="e">The <see cref="DataReceivedEventArgs"/> instance containing the event data.</param>
+            private void handleProgressError(object sender, DataReceivedEventArgs e)
+            {
+                //LastError += e.Data + Environment.NewLine;
+                //ParseProgressLine(e.Data);
+                OnMessageReceived(new MessageReceivedEventArgs { 
+                    isError=true,
+                    Message=e.Data
+                
+                });
+                
+            }
 
             /// <summary>
             /// Parses the progress line in FFmpeg output.
@@ -275,6 +310,16 @@ namespace ffmpeg_convert
                     OnProgressChanged(new ProgressChangedEventArgs { Progress = progress });
 
                     //Console.WriteLine(mPosicion.ToString() + " / "+currentItem.Properties.Duration.ZeroMilliseconds().ToString()+"    "+(progress*100).ToString()+"%");
+                }
+                else
+                {
+                    if(text!=string.Empty)
+                    OnMessageReceived(new MessageReceivedEventArgs
+                    {
+                        isError = false,
+                        Message = text
+
+                    });
                 }
             }
 
